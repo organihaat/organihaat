@@ -19,6 +19,7 @@
       100% { transform: translateX(-100%); }
     }
     html { scroll-behavior: smooth; }
+    .thumb-active { outline: 3px solid #0ea5e9; }
     .blink-notice { animation: blinkNotice 1.2s infinite; }
     @keyframes blinkNotice {
       0%, 100% { opacity: 1; }
@@ -63,7 +64,7 @@
 <!-- Scrolling Notice -->
 <div class="bg-sky-500 text-white py-2 marquee">
   <div class="marquee-content">
-    সরকারি ক্যালেন্ডার অনুযায়ী আম হার্ভেস্টের সময় শুরুঃ গোপালভোগ ২৫ মে 🥭 হিমসাগর/খিরসাপাত ৩০ মে 🥭 ল্যাংড়া ১০ জুন 🥭 আম্রপালি ও ফজলি ১৫ জুন 🥭 বিস্তারিত জানতে কল করুন: 01737887196
+    🚨  সরকারি ক্যালেন্ডার অনুযায়ী আম হার্ভেস্টের সময় শুরুঃ গোপালভোগ ২৫ মে 🥭 হিমসাগর/খিরসাপাত ৩০ মে 🥭 ল্যাংড়া ১০ জুন 🥭 আম্রপালি ও ফজলি ১৫ জুন 🥭 বিস্তারিত জানতে কল করুন: 01737887196ে
   </div>
 </div>
 
@@ -86,7 +87,11 @@
 <!-- Product Detail + Order Section -->
 <section id="order" class="max-w-6xl mx-auto p-4 hidden">
   <div class="bg-white rounded-xl shadow p-4 grid md:grid-cols-2 gap-6">
-    <img id="detail-img" class="w-full h-72 object-cover rounded-lg" alt="Product image" />
+    <div>
+      <img id="detail-img" onclick="openZoom()" class="w-full h-72 object-cover rounded-lg cursor-zoom-in" alt="Product image" />
+      <div id="detail-thumbs" class="grid grid-cols-3 gap-2 mt-3"></div>
+      <p class="text-xs text-gray-500 mt-1">ছবিতে ক্লিক করলে zoom হবে</p>
+    </div>
     <div>
       <h2 id="detail-name" class="text-2xl font-bold"></h2>
       <p class="mt-2 font-semibold">Price: <span id="detail-price"></span> Tk/kg</p>
@@ -123,6 +128,14 @@
     <h2 class="text-2xl font-bold mb-3">About Us</h2>
     <p>অর্গানিহাট খাঁটি, নিরাপদ ও মানসম্মত খাদ্যপণ্য সরবরাহের একটি অনলাইন উদ্যোগ। আমাদের লক্ষ্য হলো ভালো পণ্য সহজে আপনার ঘরে পৌঁছে দেওয়া।</p>
     <button onclick="closeAboutModal()" class="mt-4 text-red-500 w-full">Close</button>
+  </div>
+</div>
+
+<!-- Image Zoom Modal -->
+<div id="zoom-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center z-[60] p-4">
+  <div class="relative max-w-4xl w-full">
+    <button onclick="closeZoom()" class="absolute -top-10 right-0 text-white text-2xl">✕</button>
+    <img id="zoom-img" class="w-full max-h-[85vh] object-contain rounded-lg" alt="Zoomed product image" />
   </div>
 </div>
 
@@ -182,6 +195,11 @@ const products = [
     shortName:"খিরসাপাত আম",
     price:120,
     img:"https://images.unsplash.com/photo-1553279768-865429fa0078",
+    photos:[
+      "https://images.unsplash.com/photo-1553279768-865429fa0078",
+      "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716",
+      "https://images.unsplash.com/photo-1623930376395-0f3ad22cfac2"
+    ],
     description:[
       "✅ সম্ভব্য ডেলিভারি ডেটঃ ৬ জুন থেকে",
       "✅ সংগ্রহের স্থানঃ চাঁপাইনবাবগঞ্জ, রাজশাহী",
@@ -197,6 +215,11 @@ const products = [
     shortName:"খাঁটি মধু",
     price:500,
     img:"https://images.unsplash.com/photo-1587049352851-8d4e89133924",
+    photos:[
+      "https://images.unsplash.com/photo-1587049352851-8d4e89133924",
+      "https://images.unsplash.com/photo-1471943311424-646960669fbc",
+      "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62"
+    ],
     description:["✅ প্রাকৃতিক মধু", "✅ প্রতি কেজি ভিত্তিক মূল্য", "✅ অর্ডার অনুযায়ী প্যাকেজিং"]
   },
   {
@@ -205,6 +228,11 @@ const products = [
     shortName:"তাজা দুধ",
     price:80,
     img:"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b",
+    photos:[
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b",
+      "https://images.unsplash.com/photo-1563636619-e9143da7973b",
+      "https://images.unsplash.com/photo-1550583724-b2692b85b150"
+    ],
     description:["✅ তাজা দুধ", "✅ প্রতি কেজি/লিটার ভিত্তিক মূল্য", "✅ দ্রুত ডেলিভারি"]
   },
   {
@@ -213,12 +241,18 @@ const products = [
     shortName:"দেশি ডিম",
     price:180,
     img:"https://images.unsplash.com/photo-1517959105821-eaf2591984c4",
+    photos:[
+      "https://images.unsplash.com/photo-1517959105821-eaf2591984c4",
+      "https://images.unsplash.com/photo-1506976785307-8732e854ad03",
+      "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f"
+    ],
     description:["✅ দেশি ডিম", "✅ পরিমাণ অনুযায়ী অর্ডার", "✅ নিরাপদ প্যাকেজিং"]
   }
 ];
 
 let cart = [];
 let selectedProduct = null;
+let selectedPhoto = "";
 
 function renderProducts(){
   const grid = document.getElementById("product-grid");
@@ -248,7 +282,9 @@ function showProduct(id){
   const p = products.find(x=>x.id===id);
   selectedProduct = p;
 
-  document.getElementById("detail-img").src = p.img;
+  selectedPhoto = p.photos ? p.photos[0] : p.img;
+  document.getElementById("detail-img").src = selectedPhoto;
+  renderThumbs(p);
   document.getElementById("detail-name").innerText = p.name;
   document.getElementById("detail-price").innerText = p.price;
   document.getElementById("detail-description").innerHTML = p.description.map(d=>`<p>${d}</p>`).join("");
@@ -257,6 +293,35 @@ function showProduct(id){
 
   document.getElementById("order").classList.remove("hidden");
   document.getElementById("order").scrollIntoView({behavior:"smooth"});
+}
+
+function renderThumbs(product){
+  const thumbs = document.getElementById("detail-thumbs");
+  const photos = product.photos || [product.img];
+  thumbs.innerHTML = "";
+
+  photos.forEach((photo, index)=>{
+    thumbs.innerHTML += `
+      <img src="${photo}" onclick="changePhoto('${photo}', this)" class="h-20 w-full object-cover rounded cursor-pointer ${index === 0 ? 'thumb-active' : ''}" alt="Product thumbnail" />
+    `;
+  });
+}
+
+function changePhoto(photo, element){
+  selectedPhoto = photo;
+  document.getElementById("detail-img").src = photo;
+  document.querySelectorAll("#detail-thumbs img").forEach(img=>img.classList.remove("thumb-active"));
+  element.classList.add("thumb-active");
+}
+
+function openZoom(){
+  if(!selectedPhoto) return;
+  document.getElementById("zoom-img").src = selectedPhoto;
+  document.getElementById("zoom-modal").classList.remove("hidden");
+}
+
+function closeZoom(){
+  document.getElementById("zoom-modal").classList.add("hidden");
 }
 
 document.getElementById("order-weight").addEventListener("input", function(){
