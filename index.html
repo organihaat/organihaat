@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrganiHat Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    .marquee { white-space: nowrap; overflow: hidden; }
+    .marquee-content {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 15s linear infinite;
+    }
+    .marquee:hover .marquee-content { animation-play-state: paused; }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    html { scroll-behavior: smooth; }
+    .blink-notice { animation: blinkNotice 1.2s infinite; }
+    @keyframes blinkNotice {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+  </style>
+</head>
+<body class="bg-sky-50 text-gray-800">
+
+<!-- Header -->
+<header class="bg-sky-200 text-sky-950 shadow sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <a href="#home" class="flex items-center gap-3">
+      <img src="logo.jpg" class="h-12 w-auto rounded" alt="OrganiHat Logo" />
+      <div>
+        <h1 class="font-bold text-lg">অর্গানিহাট</h1>
+        <p class="text-xs">শুদ্ধতার প্রতিশ্রুতি</p>
+      </div>
+    </a>
+
+    <nav class="hidden md:flex items-center gap-6 font-medium">
+      <a href="#home" class="hover:text-sky-700">Home</a>
+      <div class="relative group">
+        <button class="hover:text-sky-700">Products ▾</button>
+        <div id="product-dropdown" class="hidden group-hover:block absolute bg-white text-gray-800 shadow-lg rounded mt-2 min-w-48 overflow-hidden"></div>
+      </div>
+      <button onclick="showContactModal()" class="hover:text-sky-700">Contact</button>
+      <button onclick="showAboutModal()" class="hover:text-sky-700">About Us</button>
+    </nav>
+
+    <button onclick="toggleCart()" class="bg-white text-sky-700 px-4 py-2 rounded shadow">
+      Cart (<span id="cart-count">0</span>)
+    </button>
+  </div>
+</header>
+
+<!-- Static Blinking Notice -->
+<div class="bg-yellow-300 text-red-700 font-bold text-center py-2 blink-notice">
+  📢 বিশেষ ঘোষণা: খিরসাপাত আমের প্রি-অর্ডার চলছে — সীমিত স্টক!
+</div>
+
+<!-- Scrolling Notice -->
+<div class="bg-sky-500 text-white py-2 marquee">
+  <div class="marquee-content">
+    🚨 নতুন প্রোডাক্ট: খিরসাপাত আম | 💰 প্রতি কেজি ভিত্তিক অর্ডার | 🚚 ডেলিভারি শুরু ৬ জুন থেকে | কার্সর রাখলে স্ক্রল থামবে
+  </div>
+</div>
+
+<!-- Hero -->
+<section id="home" class="relative">
+  <img src="https://images.unsplash.com/photo-1606787366850-de6330128bfc" class="w-full h-72 object-cover" alt="Organic food banner" />
+  <div class="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-white text-center px-4">
+    <h2 class="text-3xl md:text-4xl font-bold">Fresh & Organic Products</h2>
+    <p class="mt-2">Direct from farm to your home</p>
+    <a href="#products" class="mt-4 bg-sky-500 hover:bg-sky-600 px-6 py-2 rounded shadow">Shop Now</a>
+  </div>
+</section>
+
+<!-- Product Grid -->
+<section id="products" class="max-w-6xl mx-auto p-4">
+  <h2 class="text-2xl font-bold mb-4">Products</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="product-grid"></div>
+</section>
+
+<!-- Product Detail + Order Section -->
+<section id="order" class="max-w-6xl mx-auto p-4 hidden">
+  <div class="bg-white rounded-xl shadow p-4 grid md:grid-cols-2 gap-6">
+    <img id="detail-img" class="w-full h-72 object-cover rounded-lg" alt="Product image" />
+    <div>
+      <h2 id="detail-name" class="text-2xl font-bold"></h2>
+      <p class="mt-2 font-semibold">Price: <span id="detail-price"></span> Tk/kg</p>
+
+      <div id="detail-description" class="text-sm mt-3 space-y-1"></div>
+
+      <label class="block mt-4 font-medium">Weight / ওজন (kg)</label>
+      <input id="order-weight" type="number" min="0" step="0.1" placeholder="যেমন: 2.5" class="w-full border p-2 mt-1 rounded" />
+
+      <p class="mt-3 text-lg font-bold">Total Price: <span id="order-total">0</span> Tk</p>
+
+      <button onclick="addSelectedToCart()" class="mt-3 bg-sky-500 hover:bg-sky-600 text-white w-full py-2 rounded">
+        Add To Cart
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Modal -->
+<div id="contact-modal" class="hidden fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-xl p-5 w-full max-w-sm text-center">
+    <h2 class="text-2xl font-bold mb-3">Contact</h2>
+    <p>📞 Mobile: 01737887196</p>
+    <p>📧 Email: organihat@gmail.com</p>
+    <p>💬 WhatsApp: 01737887196</p>
+    <button onclick="openWhatsAppChat()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded w-full">Open WhatsApp</button>
+    <button onclick="closeContactModal()" class="mt-2 text-red-500 w-full">Close</button>
+  </div>
+</div>
+
+<!-- About Modal -->
+<div id="about-modal" class="hidden fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-xl p-5 w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-3">About Us</h2>
+    <p>অর্গানিহাট খাঁটি, নিরাপদ ও মানসম্মত খাদ্যপণ্য সরবরাহের একটি অনলাইন উদ্যোগ। আমাদের লক্ষ্য হলো ভালো পণ্য সহজে আপনার ঘরে পৌঁছে দেওয়া।</p>
+    <button onclick="closeAboutModal()" class="mt-4 text-red-500 w-full">Close</button>
+  </div>
+</div>
+
+<!-- Cart Sidebar -->
+<div id="cart" class="hidden fixed right-0 top-0 w-80 h-full bg-white shadow-xl p-4 overflow-y-auto z-50">
+  <div class="flex justify-between items-center mb-3">
+    <h2 class="font-bold text-lg">Cart</h2>
+    <button onclick="toggleCart()" class="text-red-500">Close</button>
+  </div>
+
+  <div id="cart-items"></div>
+
+  <p class="mt-2">Subtotal: <span id="subtotal">0</span> Tk</p>
+  <p>Delivery: <span id="delivery">60</span> Tk</p>
+  <p class="font-bold text-lg">Total: <span id="grand">0</span> Tk</p>
+
+  <input id="name" placeholder="Name" class="w-full border p-2 mt-2 rounded" />
+  <input id="phone" placeholder="Phone" class="w-full border p-2 mt-2 rounded" />
+  <textarea id="address" placeholder="Address" class="w-full border p-2 mt-2 rounded"></textarea>
+
+  <button onclick="orderWhatsApp()" class="bg-green-600 text-white w-full mt-3 p-2 rounded">Order via WhatsApp</button>
+</div>
+
+<!-- Floating WhatsApp Live Chat -->
+<button onclick="openWhatsAppChat()" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-full shadow-lg z-40 flex items-center gap-2 font-semibold">
+  <span class="text-xl">🟢</span>
+  <span>WhatsApp Live Chat</span>
+</button>
+
+<!-- Footer -->
+<footer class="bg-sky-200 text-sky-950 mt-10">
+  <div class="max-w-6xl mx-auto p-5 grid md:grid-cols-3 gap-4 text-sm">
+    <div>
+      <h3 class="font-bold text-lg">অর্গানিহাট</h3>
+      <p>শুদ্ধতার প্রতিশ্রুতি</p>
+    </div>
+    <div>
+      <h3 class="font-bold">Quick Menu</h3>
+      <p><a href="#home">Home</a></p>
+      <p><a href="#products">Products</a></p>
+      <p><button onclick="showContactModal()">Contact</button></p>
+    </div>
+    <div>
+      <h3 class="font-bold">Contact</h3>
+      <p>01737887196</p>
+      <p>organihat@gmail.com</p>
+    </div>
+  </div>
+  <p class="text-center text-xs pb-3">© 2026 OrganiHat. All Rights Reserved.</p>
+</footer>
+
+<script>
+const products = [
+  {
+    id:1,
+    name:"খিরসাপাত আম | Khirshapat",
+    shortName:"খিরসাপাত আম",
+    price:120,
+    img:"https://images.unsplash.com/photo-1553279768-865429fa0078",
+    description:[
+      "✅ সম্ভব্য ডেলিভারি ডেটঃ ৬ জুন থেকে",
+      "✅ সংগ্রহের স্থানঃ চাঁপাইনবাবগঞ্জ, রাজশাহী",
+      "✅ এটি বাংলাদেশের ৩য় জি.আই পণ্য; অনেকে হিমসাগর আম নামেও চেনে।",
+      "✅ প্রতি আম প্রায় ২০০-২৫০ গ্রাম; কেজিতে আনুমানিক ৪-৫টি আম।",
+      "✅ কড়া মিষ্টি ও পাতলা খোসা।",
+      "✅ উক্ত প্রাইসের সাথে কুরিয়ার চার্জ যুক্ত হবে।"
+    ]
+  },
+  {
+    id:2,
+    name:"খাঁটি মধু | Pure Honey",
+    shortName:"খাঁটি মধু",
+    price:500,
+    img:"https://images.unsplash.com/photo-1587049352851-8d4e89133924",
+    description:["✅ প্রাকৃতিক মধু", "✅ প্রতি কেজি ভিত্তিক মূল্য", "✅ অর্ডার অনুযায়ী প্যাকেজিং"]
+  },
+  {
+    id:3,
+    name:"তাজা দুধ | Fresh Milk",
+    shortName:"তাজা দুধ",
+    price:80,
+    img:"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b",
+    description:["✅ তাজা দুধ", "✅ প্রতি কেজি/লিটার ভিত্তিক মূল্য", "✅ দ্রুত ডেলিভারি"]
+  },
+  {
+    id:4,
+    name:"দেশি ডিম | Deshi Eggs",
+    shortName:"দেশি ডিম",
+    price:180,
+    img:"https://images.unsplash.com/photo-1517959105821-eaf2591984c4",
+    description:["✅ দেশি ডিম", "✅ পরিমাণ অনুযায়ী অর্ডার", "✅ নিরাপদ প্যাকেজিং"]
+  }
+];
+
+let cart = [];
+let selectedProduct = null;
+
+function renderProducts(){
+  const grid = document.getElementById("product-grid");
+  const dropdown = document.getElementById("product-dropdown");
+  grid.innerHTML = "";
+  dropdown.innerHTML = "";
+
+  products.forEach(p=>{
+    grid.innerHTML += `
+      <div onclick="showProduct(${p.id})" class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer overflow-hidden">
+        <img src="${p.img}" class="w-full h-40 object-cover" alt="${p.shortName}" />
+        <div class="p-3">
+          <h3 class="font-bold">${p.shortName}</h3>
+          <p class="text-sky-700 font-semibold">${p.price} Tk/kg</p>
+          <button class="mt-2 bg-sky-500 text-white px-3 py-1 rounded w-full">View & Order</button>
+        </div>
+      </div>`;
+
+    dropdown.innerHTML += `
+      <button onclick="showProduct(${p.id})" class="block w-full text-left px-4 py-2 hover:bg-sky-100">
+        ${p.shortName}
+      </button>`;
+  });
+}
+
+function showProduct(id){
+  const p = products.find(x=>x.id===id);
+  selectedProduct = p;
+
+  document.getElementById("detail-img").src = p.img;
+  document.getElementById("detail-name").innerText = p.name;
+  document.getElementById("detail-price").innerText = p.price;
+  document.getElementById("detail-description").innerHTML = p.description.map(d=>`<p>${d}</p>`).join("");
+  document.getElementById("order-weight").value = "";
+  document.getElementById("order-total").innerText = 0;
+
+  document.getElementById("order").classList.remove("hidden");
+  document.getElementById("order").scrollIntoView({behavior:"smooth"});
+}
+
+document.getElementById("order-weight").addEventListener("input", function(){
+  const weight = parseFloat(this.value) || 0;
+  document.getElementById("order-total").innerText = selectedProduct ? weight * selectedProduct.price : 0;
+});
+
+function addSelectedToCart(){
+  if(!selectedProduct) return alert("Please select a product first");
+
+  const weight = parseFloat(document.getElementById("order-weight").value);
+  if(!weight || weight <= 0) return alert("Please enter weight");
+
+  cart.push({
+    name:selectedProduct.shortName,
+    weight,
+    price:selectedProduct.price,
+    total:weight * selectedProduct.price
+  });
+
+  updateCart();
+  toggleCart();
+}
+
+function updateCart(){
+  document.getElementById("cart-count").innerText = cart.length;
+  let html = "";
+  let subtotal = 0;
+
+  cart.forEach((item,index)=>{
+    subtotal += item.total;
+    html += `
+      <div class="border rounded p-2 mb-2">
+        <div class="flex justify-between gap-2">
+          <span>${item.name}</span>
+          <button onclick="removeItem(${index})" class="text-red-500">X</button>
+        </div>
+        <p class="text-sm">${item.weight} kg × ${item.price} = ${item.total} Tk</p>
+      </div>`;
+  });
+
+  document.getElementById("cart-items").innerHTML = html || "<p class='text-sm text-gray-500'>Cart is empty</p>";
+  document.getElementById("subtotal").innerText = subtotal;
+
+  const delivery = cart.length > 0 ? 60 : 0;
+  document.getElementById("delivery").innerText = delivery;
+  document.getElementById("grand").innerText = subtotal + delivery;
+}
+
+function removeItem(index){
+  cart.splice(index,1);
+  updateCart();
+}
+
+function toggleCart(){
+  document.getElementById("cart").classList.toggle("hidden");
+}
+
+function orderWhatsApp(){
+  if(cart.length === 0) return alert("Cart is empty");
+
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const address = document.getElementById("address").value.trim();
+
+  if(!name || !phone || !address) return alert("Please fill Name, Phone and Address");
+
+  let msg = "🛒 Order Details:%0A%0A";
+  cart.forEach(item=>{
+    msg += `${item.name} - ${item.weight} kg × ${item.price} = ${item.total} Tk%0A`;
+  });
+
+  msg += `%0ASubtotal: ${document.getElementById("subtotal").innerText} Tk`;
+  msg += `%0ADelivery: ${document.getElementById("delivery").innerText} Tk`;
+  msg += `%0ATotal: ${document.getElementById("grand").innerText} Tk%0A`;
+  msg += `%0AName: ${name}%0APhone: ${phone}%0AAddress: ${address}`;
+
+  window.open(`https://wa.me/8801737887196?text=${msg}`, "_blank");
+}
+
+function showContactModal(){
+  document.getElementById("contact-modal").classList.remove("hidden");
+}
+
+function closeContactModal(){
+  document.getElementById("contact-modal").classList.add("hidden");
+}
+
+function showAboutModal(){
+  document.getElementById("about-modal").classList.remove("hidden");
+}
+
+function closeAboutModal(){
+  document.getElementById("about-modal").classList.add("hidden");
+}
+
+function openWhatsAppChat(){
+  window.open("https://wa.me/8801737887196", "_blank");
+}
+
+renderProducts();
+updateCart();
+</script>
+
+</body>
+</html>
