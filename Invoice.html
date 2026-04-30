@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrganiHaat Invoice Generator</title>
+  <!-- Offline version: no internet library needed. Use browser Print / Save as PDF. -->
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f1f0ea;
+      font-family: Arial, sans-serif;
+      color: #000;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 22px;
+      padding: 18px;
+      max-width: 1280px;
+      margin: auto;
+    }
+
+    .panel {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.08);
+      height: fit-content;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+
+    .section {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: #fff;
+    }
+
+    .section h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    textarea { min-height: 65px; resize: vertical; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .item-input-row {
+      display: grid;
+      grid-template-columns: 1.4fr .55fr .75fr 34px;
+      gap: 7px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .item-input-row input { margin-bottom: 0; }
+
+    button {
+      cursor: pointer;
+      border-radius: 6px;
+      padding: 11px;
+      border: 1px solid #000;
+      background: #fff;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .btn-dark { background: #000; color: #fff; }
+    .btn-red { border: none; background: #ffe8e8; color: #d00000; padding: 8px; }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .preview-wrap { overflow-x: auto; }
+
+    .invoice-paper {
+      width: 210mm;
+      height: 297mm;
+      min-height: 297mm;
+      background: #f8f8f1;
+      margin: 0 auto;
+      padding: 14mm 13mm;
+      font-family: Georgia, 'Times New Roman', serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.12);
+    }
+
+    .top-area {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 28px;
+    }
+
+    .invoice-title {
+      font-size: 35px;
+      letter-spacing: 2px;
+      line-height: 1.5;
+      margin: 0 0 3px;
+      font-weight: 500;
+    }
+
+    .invoice-meta {
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .logo-box {
+      text-align: right;
+      font-family: Arial, sans-serif;
+    }
+
+    .company-logo {
+      width: 170px;
+      height: auto;
+      display: block;
+      margin-left: auto;
+    }
+
+    .bill-area {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 36px;
+      align-items: stretch;
+      margin-bottom: 28px;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .divider-vertical { background: #000; width: 1px; }
+
+    .bill-area strong {
+      display: block;
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border-top: 1px solid #000;
+      padding: 10px 10px;
+    }
+
+    th {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    th:nth-child(2), th:nth-child(3), th:nth-child(4),
+    td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: right; }
+
+    tbody tr:last-child td { border-bottom: 1px solid #000; }
+
+    .summary-area {
+      width: 315px;
+      margin-left: auto;
+      margin-top: 14px;
+      font-size: 16px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      gap: 20px;
+    }
+
+    .summary-line strong { font-weight: 700; }
+    .discount { color: #d00000; }
+
+    .grand-total {
+      border-top: 1px solid #000;
+      padding-top: 15px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 27px;
+      font-weight: 900;
+    }
+
+    .prepared {
+      width: 300px;
+      margin: 72px 0 45px auto;
+      font-size: 24px;
+      line-height: 1.35;
+    }
+
+    .prepared strong { font-size: 27px; }
+
+    .footer-line {
+      border-top: 1px solid #000;
+      margin-top: 20px;
+      padding-top: 18px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .footer-brand {
+      font-size: 28px;
+      font-weight: 900;
+      margin-top: 5px;
+    }
+
+    .note {
+      margin-top: 18px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        background: #f8f8f1;
+        margin: 0;
+      }
+
+      .panel {
+        display: none !important;
+      }
+
+      .app {
+        display: block;
+        padding: 0;
+        margin: 0;
+        max-width: none;
+      }
+
+      .preview-wrap {
+        overflow: visible;
+        height: auto;
+      }
+
+      .invoice-paper {
+        width: 210mm;
+        height: 297mm;
+        min-height: 297mm;
+        margin: 0;
+        box-shadow: none;
+        transform: none !important;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; padding: 10px; }
+      .invoice-paper {
+        transform: scale(.54);
+        transform-origin: top left;
+        margin-bottom: -510px;
+      }
+      .preview-wrap { height: 630px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <h2>OrganiHaat Invoice</h2>
+
+      <div class="section">
+        <h3>Invoice Details</h3>
+        <label>Invoice No.</label>
+        <input id="invoiceNo" value="#123424" oninput="renderInvoice()">
+        <label>Invoice Date</label>
+        <input id="invoiceDate" value="12/23/2026" oninput="renderInvoice()">
+      </div>
+
+      <div class="section">
+        <h3>From Bill</h3>
+        <label>Name</label>
+        <input id="fromName" value="OrganiHaat" oninput="renderInvoice()">
+        <label>Phone</label>
+        <input id="fromPhone" value="+880 1234-567890" oninput="renderInvoice()">
+        <label>Address</label>
+        <textarea id="fromAddress" oninput="renderInvoice()">Dhaka, Bangladesh</textarea>
+      </div>
+
+      <div class="section">
+        <h3>To Bill</h3>
+        <label>Name</label>
+        <input id="toName" value="Imani Olowe" oninput="renderInvoice()">
+        <label>Phone</label>
+        <input id="toPhone" value="+123-456-7890" oninput="renderInvoice()">
+        <label>Address</label>
+        <textarea id="toAddress" oninput="renderInvoice()">63 Ivy Road, Hawkwille, GA, USA 31036</textarea>
+      </div>
+
+      <div class="section">
+        <h3>Items</h3>
+        <div id="itemsBox"></div>
+        <button class="btn-dark" onclick="addItem()">+ Add Item</button>
+      </div>
+
+      <div class="section">
+        <h3>Discount / Delivery / VAT</h3>
+        <div class="two-col">
+          <div>
+            <label>Discount (%)</label>
+            <input id="discountPercent" type="number" value="10" oninput="renderInvoice()">
+          </div>
+          <div>
+            <label>Delivery Charge</label>
+            <input id="deliveryCharge" type="number" value="25" oninput="renderInvoice()">
+          </div>
+        </div>
+        <label>VAT (%)</label>
+        <input id="vatPercent" type="number" value="5" oninput="renderInvoice()">
+      </div>
+
+      <div class="section button-row">
+        <button class="btn-dark" onclick="downloadPDF()">Download PDF</button>
+        <button onclick="resetDemo()">Reset</button>
+      </div>
+    </section>
+
+    <section class="preview-wrap">
+      <div class="invoice-paper" id="invoicePaper">
+        <div class="top-area">
+          <div>
+            <h1 class="invoice-title">INVOICE</h1>
+            <div class="invoice-meta">
+              Invoice No: <span id="pInvoiceNo"></span><br>
+              Invoice Date: <span id="pInvoiceDate"></span>
+            </div>
+          </div>
+
+          <div class="logo-box">
+            <img class="company-logo" src="logo.png" alt="OrganiHaat Logo">
+          </div>
+        </div>
+
+        <div class="bill-area">
+          <div>
+            <strong>BILLED FROM:</strong>
+            <div id="pFromBill"></div>
+          </div>
+
+          <div class="divider-vertical"></div>
+
+          <div>
+            <strong>BILLED TO:</strong>
+            <div id="pToBill"></div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="pItems"></tbody>
+        </table>
+
+        <div class="summary-area" id="pSummary"></div>
+
+        <div class="footer-line">
+          <div class="note">* If there any issue after receiving the product please inform us.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let items = [
+      { name: 'Eggshell Camisole Top', qty: 1, price: 123 },
+      { name: 'Cuban Collar Shirt', qty: 2, price: 127 },
+      { name: 'Floral Cotton Dress', qty: 1, price: 123 }
+    ];
+
+    function money(value) {
+      return '৳' + Number(value || 0).toFixed(2);
+    }
+
+    function safeText(id) {
+      return document.getElementById(id).value.replace(/\n/g, '<br>');
+    }
+
+    function renderItemInputs() {
+      const box = document.getElementById('itemsBox');
+      box.innerHTML = '';
+
+      items.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'item-input-row';
+        row.innerHTML = `
+          <input value="${item.name}" oninput="updateItem(${index}, 'name', this.value)">
+          <input type="number" value="${item.qty}" oninput="updateItem(${index}, 'qty', this.value)">
+          <input type="number" value="${item.price}" oninput="updateItem(${index}, 'price', this.value)">
+          <button class="btn-red" onclick="removeItem(${index})">×</button>
+        `;
+        box.appendChild(row);
+      });
+    }
+
+    function updateItem(index, key, value) {
+      items[index][key] = key === 'name' ? value : Number(value || 0);
+      renderInvoice();
+    }
+
+    function addItem() {
+      items.push({ name: 'New Item', qty: 1, price: 0 });
+      renderItemInputs();
+      renderInvoice();
+    }
+
+    function removeItem(index) {
+      items.splice(index, 1);
+      renderItemInputs();
+      renderInvoice();
+    }
+
+    function calculateTotals() {
+      const subtotal = items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0), 0);
+      const discountPercent = Number(document.getElementById('discountPercent').value || 0);
+      const deliveryCharge = Number(document.getElementById('deliveryCharge').value || 0);
+      const vatPercent = Number(document.getElementById('vatPercent').value || 0);
+
+      const discountAmount = subtotal * discountPercent / 100;
+      const vatAmount = (subtotal - discountAmount + deliveryCharge) * vatPercent / 100;
+      const total = subtotal - discountAmount + deliveryCharge + vatAmount;
+
+      return { subtotal, discountPercent, discountAmount, deliveryCharge, vatPercent, vatAmount, total };
+    }
+
+    function renderInvoice() {
+      document.getElementById('pInvoiceNo').innerHTML = safeText('invoiceNo');
+      document.getElementById('pInvoiceDate').innerHTML = safeText('invoiceDate');
+
+      document.getElementById('pFromBill').innerHTML = `
+        ${safeText('fromName')}<br>
+        ${safeText('fromPhone')}<br>
+        ${safeText('fromAddress')}
+      `;
+
+      document.getElementById('pToBill').innerHTML = `
+        ${safeText('toName')}<br>
+        ${safeText('toPhone')}<br>
+        ${safeText('toAddress')}
+      `;
+
+      document.getElementById('pItems').innerHTML = items.map(item => {
+        const rowTotal = Number(item.qty || 0) * Number(item.price || 0);
+        return `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.qty}</td>
+            <td>${money(item.price)}</td>
+            <td>${money(rowTotal)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const t = calculateTotals();
+      document.getElementById('pSummary').innerHTML = `
+        <div class="summary-line"><strong>Subtotal</strong><span>${money(t.subtotal)}</span></div>
+        <div class="summary-line discount"><strong>Discount (${t.discountPercent}%)</strong><span>-${money(t.discountAmount)}</span></div>
+        <div class="summary-line"><strong>Delivery Charge</strong><span>${money(t.deliveryCharge)}</span></div>
+        <div class="summary-line"><strong>VAT (${t.vatPercent}%)</strong><span>${money(t.vatAmount)}</span></div>
+        <div class="grand-total"><span>Total</span><span>${money(t.total)}</span></div>
+      `;
+    }
+
+    function downloadPDF() {
+      // Offline method: Android/desktop browser print dialog.
+      // Choose “Save as PDF” and paper size A4.
+      window.print();
+    }
+
+    function resetDemo() {
+      items = [
+        { name: 'Eggshell Camisole Top', qty: 1, price: 123 },
+        { name: 'Cuban Collar Shirt', qty: 2, price: 127 },
+        { name: 'Floral Cotton Dress', qty: 1, price: 123 }
+      ];
+      renderItemInputs();
+      renderInvoice();
+    }
+
+    renderItemInputs();
+    renderInvoice();
+  </script>
+</body>
+</html>
